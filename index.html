@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8fafc">
+  <meta name="description" content="CFG-Policy composes generative policies with classifier-free guidance for online reinforcement learning and RL post-training.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="CFG-Policy">
+  <meta property="og:description" content="Unified Diffusion Policy Learning Framework via Classifier-free Guidance">
+  <meta property="og:image" content="https://zhy-liu.github.io/cfg-policy-page/assets/method.png">
+  <title>CFG-Policy | Project Page</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="shell nav-row">
+      <a class="brand" href="#top" aria-label="CFG-Policy, back to top"><span class="brand-mark">C<span>F</span>G</span><span>Policy</span></a>
+      <nav aria-label="Main navigation">
+        <a href="#overview">Overview</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="https://github.com/zhy-liu/cfg-policy-page" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero shell" id="top" aria-labelledby="hero-title">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Research project <span class="eyebrow-divider">/</span> Diffusion reinforcement learning</div>
+      <h1 id="hero-title"><span class="title-accent">CFG-Policy</span><span class="title-colon">:</span> Unified Diffusion Policy Learning Framework via Classifier-free Guidance</h1>
+      <p class="hero-lede">One sampling interface for two learning regimes: preserve exploration while learning to exploit, or preserve a pretrained policy while learning to adapt.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#method">Explore the method <span aria-hidden="true">↓</span></a>
+        <a class="button button-secondary" href="https://github.com/zhy-liu/cfg-policy-page" target="_blank" rel="noopener noreferrer">Project repository <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="hero-tags" aria-label="Research areas"><span>Classifier-free guidance</span><span>Online RL</span><span>RL post-training</span></div>
+    </section>
+
+    <section class="section section-overview" id="overview" aria-labelledby="overview-title">
+      <div class="shell">
+        <div class="section-head">
+          <span class="section-index">01 / OVERVIEW</span>
+          <h2 id="overview-title">A shared solution to two different problems</h2>
+          <p>Reward optimization can narrow a diffusion policy's behavior. Fine-tuning a pretrained generative policy can also disturb capabilities it already has. CFG-Policy addresses both by giving exploration and exploitation separate generative branches.</p>
+        </div>
+        <figure class="figure-card">
+          <img src="assets/motivation.png" width="2000" height="1125" alt="The paper's motivation: online diffusion RL can lose exploratory modes, while RL post-training must protect pretrained behavior." fetchpriority="high">
+          <figcaption>Motivation from the paper: different learning regimes need different capabilities to remain intact.</figcaption>
+        </figure>
+        <div class="abstract-grid">
+          <div>
+            <span class="small-label">THE IDEA IN ONE SENTENCE</span>
+            <p class="tldr">Keep one generative policy fixed, train the complementary policy, and combine their fields <em>during</em> action sampling.</p>
+          </div>
+          <div class="abstract-copy">
+            <h3>Abstract</h3>
+            <p>Diffusion policies can represent multimodal actions, but reinforcement learning may reduce their diversity. In RL post-training, directly fine-tuning a pretrained policy may disrupt acquired capabilities. CFG-Policy separates exploration and exploitation into two generative policies and combines their score or velocity fields through classifier-free guidance during sampling. In online RL, a frozen exploration branch sustains diversity while an exploitation branch learns from rewards. In offline-to-online post-training, a pretrained exploitation branch stays frozen while a trainable branch steers behavior. The framework preserves the underlying RL objectives and is evaluated with QSM and QVPO on five MuJoCo tasks and with Flow-SDE+PPO on four RoboTwin manipulation tasks.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-method" id="method" aria-labelledby="method-title">
+      <div class="shell">
+        <div class="section-head">
+          <span class="section-index">02 / METHOD</span>
+          <h2 id="method-title">Compose policies inside the generative process</h2>
+          <p>Both branches evaluate the same intermediate sample at each diffusion or flow step. The guidance weight controls how much each branch shapes the resulting action.</p>
+        </div>
+        <div class="equation" aria-label="v sub w equals open parenthesis one minus w close parenthesis v sub A plus w v sub B">
+          <span>v<sub>w</sub></span><span class="equation-equals">=</span><span>(1 − w) v<sub>A</sub> + w v<sub>B</sub></span>
+        </div>
+        <figure class="figure-card method-figure">
+          <img src="assets/method.png" width="2134" height="1600" alt="CFG-Policy combines exploration and exploitation policy fields during sampling. Online RL freezes exploration; post-training freezes exploitation." loading="lazy">
+          <figcaption>CFG-Policy sampling and its two complementary training setups, reproduced from the paper.</figcaption>
+        </figure>
+        <div class="regime-grid">
+          <article class="regime-card regime-online">
+            <span class="regime-number">01</span>
+            <h3>Online RL</h3>
+            <p class="regime-subtitle">Preserve exploration. Learn exploitation.</p>
+            <p>Keep the exploration policy frozen to sustain behavioral diversity. Optimize the exploitation policy using the existing RL objective, then sample actions from their composed field.</p>
+            <div class="regime-foot">Evaluated with <strong>QSM</strong> and <strong>QVPO</strong></div>
+          </article>
+          <article class="regime-card regime-post">
+            <span class="regime-number">02</span>
+            <h3>RL post-training</h3>
+            <p class="regime-subtitle">Preserve capability. Learn adaptation.</p>
+            <p>Keep the pretrained policy frozen and train a second steering branch. Guidance adapts behavior without directly changing the original action generator.</p>
+            <div class="regime-foot">Evaluated with <strong>Flow-SDE+PPO</strong></div>
+          </article>
+        </div>
+        <div class="method-note"><span class="note-symbol" aria-hidden="true">↗</span><p><strong>Adaptive guidance.</strong> Instead of fixing the weight throughout training, CFG-Policy selects it to improve critic value while maintaining a minimum pathwise deviation from the pure exploitation sampler.</p></div>
+      </div>
+    </section>
+
+    <section class="section section-results" id="results" aria-labelledby="results-title">
+      <div class="shell">
+        <div class="section-head">
+          <span class="section-index">03 / RESULTS</span>
+          <h2 id="results-title">Improvement across control and manipulation</h2>
+          <p>The paper evaluates the same policy composition principle in online MuJoCo control and RoboTwin RL post-training.</p>
+        </div>
+        <div class="result-highlight-grid">
+          <div class="result-highlight"><strong>5<span>/5</span></strong><span>MuJoCo tasks improved for both QSM and QVPO</span></div>
+          <div class="result-highlight"><strong>4<span>/4</span></strong><span>RoboTwin tasks improved or matched for both tested models</span></div>
+          <div class="result-highlight"><strong>+16.3<span>%</span></strong><span>QVPO mean return on HalfCheetah-v4</span></div>
+        </div>
+
+        <div class="result-block" id="online-results">
+          <div class="result-heading"><div><span class="small-label">ONLINE REINFORCEMENT LEARNING</span><h3>MuJoCo continuous control</h3></div><p>Final episodic return, mean ± sample standard deviation over five runs. Higher is better.</p></div>
+          <div class="table-scroll" role="region" aria-label="MuJoCo results table" tabindex="0">
+            <table>
+              <thead><tr><th scope="col">Method</th><th scope="col">HalfCheetah</th><th scope="col">Walker2d</th><th scope="col">Ant</th><th scope="col">Humanoid</th><th scope="col">Hopper</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">QSM</th><td>5,020 ± 455</td><td>2,041 ± 477</td><td>−24 ± 3</td><td>5,922 ± 262</td><td>2,753 ± 307</td></tr>
+                <tr class="emphasis-row"><th scope="row">QSM + CFG-Policy</th><td>6,218 ± 533</td><td>2,349 ± 583</td><td>1,425 ± 308</td><td>6,094 ± 169</td><td>3,101 ± 461</td></tr>
+                <tr><th scope="row">QVPO</th><td>11,166 ± 5,076</td><td>5,220 ± 689</td><td>7,129 ± 61</td><td>6,612 ± 214</td><td>3,727 ± 176</td></tr>
+                <tr class="emphasis-row"><th scope="row">QVPO + CFG-Policy</th><td>12,990 ± 1,993</td><td>5,692 ± 413</td><td>7,374 ± 45</td><td>7,041 ± 385</td><td>3,871 ± 192</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <figure class="figure-card results-figure"><img src="assets/learning-curves.png" width="2250" height="1245" alt="Training return curves on HalfCheetah, Walker2d, Ant, Humanoid and Hopper comparing QSM and QVPO with and without CFG-Policy." loading="lazy"><figcaption>Training return across five MuJoCo tasks; shaded bands indicate one standard deviation.</figcaption></figure>
+        </div>
+
+        <div class="result-block" id="post-training-results">
+          <div class="result-heading"><div><span class="small-label">RL POST-TRAINING</span><h3>RoboTwin manipulation</h3></div><p>Task success rate when adapting pretrained π<sub>0</sub> and π<sub>0.5</sub> policies. Higher is better.</p></div>
+          <div class="table-scroll" role="region" aria-label="RoboTwin results table" tabindex="0">
+            <table>
+              <thead><tr><th scope="col">Model</th><th scope="col">Method</th><th scope="col">Adjust Bottle</th><th scope="col">Pick Dual Bottles</th><th scope="col">Rotate QR Code</th><th scope="col">Grab Roller</th></tr></thead>
+              <tbody>
+                <tr><th scope="row" rowspan="2">π<sub>0</sub></th><td>Flow-SDE+PPO</td><td>82.81%</td><td>43.75%</td><td>34.38%</td><td>92.19%</td></tr>
+                <tr class="emphasis-row"><td>CFG-Policy</td><td>98.44%</td><td>57.81%</td><td>42.19%</td><td>93.75%</td></tr>
+                <tr><th scope="row" rowspan="2">π<sub>0.5</sub></th><td>Flow-SDE+PPO</td><td>89.06%</td><td>12.50%</td><td>7.81%</td><td>100.00%</td></tr>
+                <tr class="emphasis-row"><td>CFG-Policy</td><td>92.19%</td><td>15.62%</td><td>10.94%</td><td>100.00%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <figure class="figure-card environments-figure"><img src="assets/environments.png" width="2650" height="1492" alt="Example MuJoCo locomotion and RoboTwin robot manipulation environments used in the paper." loading="lazy"><figcaption>Example continuous-control and robot-manipulation evaluation environments from the paper.</figcaption></figure>
+        </div>
+
+        <div class="result-block ablation-block">
+          <div class="result-heading"><div><span class="small-label">ABLATION</span><h3>Why composition matters</h3></div><p>Adaptive guidance outperformed the two tested fixed weights on HalfCheetah-v4. Directly blending independently sampled actions did not reproduce the gains of composing fields during sampling.</p></div>
+          <figure class="figure-card results-figure"><img src="assets/ablation.png" width="2430" height="915" alt="Comparison of adaptive and fixed guidance coefficients for QSM and QVPO on HalfCheetah-v4." loading="lazy"><figcaption>Adaptive guidance compared with fixed coefficients of 0.8 and 0.98. This comparison covers the two fixed weights tested in the paper.</figcaption></figure>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="shell footer-row"><div><strong>CFG-Policy</strong><p>Unified Diffusion Policy Learning Framework via Classifier-free Guidance</p></div><div class="footer-links"><a href="#top">Back to top ↑</a><a href="https://github.com/zhy-liu/cfg-policy-page" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div></div><div class="shell footer-credit">Page structure inspired by the <a href="https://github.com/wadx2019/qvpo-webpage" target="_blank" rel="noopener noreferrer">QVPO project page</a>. Figures and results are from the supplied CFG-Policy manuscript.</div></footer>
+</body>
+</html>
